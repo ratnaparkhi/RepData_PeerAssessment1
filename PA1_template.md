@@ -75,7 +75,7 @@ mInt = avgSteps[avgSteps$steps == max(avgSteps$steps), ]$interval
 
 **Interval with the maximum average of number of steps is: 835.**
 
-## Section 4 - Imputing missing (NA) values
+## Section 4 - Missing (NA) values
 There are a number of days/intervals where there are missing values (coded as NA). The presence of missing days may introduce bias into some calculations or summaries of the data. Missing values are imputed here and mean/median calculated and histogram is plotted.
 
 ### Section 4.1 - Total number missing values (i.e. the total number of rows with NAs)
@@ -90,7 +90,7 @@ numNAs = sum(!good1)
 **Total number of rows with NAs: 2304.**
 
 ### Section 4.2 - Imputing missing values
-Missing values are set to the mean of for the respective 5-minute interval found in Section 3.1
+Simple strategy for replacing missing values is used. Missing values are set to the rounded value of the mean, of the steps taken during  the corresponding 5-minute interval, found in Section 3.1
 
 
 ```r
@@ -111,7 +111,7 @@ for (i in 1:lng) {
 # Aggregate the data from interval to per day.
 actd2 = as.data.frame(xtabs(steps ~ date, data = actd))
 names(actd2)[2] = "steps"
-hist(actd2$steps, main = "Histogram of daily steps from Oct 1, 2012 to Nov 30 2012", 
+hist(actd2$steps, main = "Histogram of daily steps, after imputing missing values", 
     xlab = "Steps", ylab = "Frequency in #days", breaks = 25)
 ```
 
@@ -149,23 +149,20 @@ levels(days)[3:4] = "weekend"
 levels(days)[4:6] = "weekday"
 levels(days)[1:2] = "weekday"
 actd$days = days
-# Make two data frame - one for weekday days and other for weekend days.
-wkDay <- actd[actd$days == "weekday", ][1:3]
-wendDay <- actd[actd$days == "weekend", ][1:3]
 
-library(reshape2)
-mactd1 <- melt(wkDay, id = c("date", "interval"), message.vars = vars)
-avgSteps1 <- dcast(mactd1, interval ~ variable, mean, na.rm = TRUE)
+library(lattice)
+```
 
-mactd2 <- melt(wendDay, id = c("date", "interval"), message.vars = vars)
-avgSteps2 <- dcast(mactd2, interval ~ variable, mean, na.rm = TRUE)
+```
+## Warning: package 'lattice' was built under R version 3.0.3
+```
 
-# Create two plots - interval Vs steps
-par(mfcol = c(2, 1))
-plot(avgSteps1$interval, avgSteps1$steps, type = "l", main = "Weekday Daily Activity Pattern", 
-    xlab = "Five minute intervals during the day", ylab = "Average Steps")
-plot(avgSteps2$interval, avgSteps2$steps, type = "l", main = "Weekend Daily Activity Pattern", 
-    xlab = "Five minute intervals during the day", ylab = "Average Steps")
+```r
+mlt1 <- melt(actd, id = c("date", "interval", "days"), message.vars = vars)
+astp1 <- dcast(mlt1, interval + days ~ variable, mean, na.rm = TRUE)
+xyplot(astp1$steps ~ astp1$interval | astp1$days, layout = c(1, 2), type = "l", 
+    main = "Panel plot of Daily Activity Pattern", xlab = "Five minute intervals during the day", 
+    ylab = "Average Steps")
 ```
 
 ![plot of chunk unnamed-chunk-9](figure/unnamed-chunk-9.png) 
